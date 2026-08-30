@@ -1,1 +1,27 @@
-
+[
+  {
+    "id": "Fact 01",
+    "title": "Did you know?",
+    "text": "The human brain uses about 20 percent of the body's energy."
+  },
+  {
+    "id": "Fact 02",
+    "title": "Did you know?",
+    "text": "A day on Venus is longer than a year on Venus."
+  },
+  {
+    "id": "Fact 03",
+    "title": "Did you know?",
+    "text": "Octopuses have three hearts."
+  },
+  {
+    "id": "Fact 04",
+    "title": "Did you know?",
+    "text": "Honey can remain edible for thousands of years when stored properly."
+  },
+  {
+    "id": "Fact 05",
+    "title": "Did you know?",
+    "text": "The human brain contains roughly 86 billion neurons."
+  }
+]
