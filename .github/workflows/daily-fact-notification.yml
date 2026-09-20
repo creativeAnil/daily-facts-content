@@ -9,20 +9,22 @@ jobs:
   send:
     runs-on: ubuntu-latest
     steps:
-      - name: Check today's fact
+      - name: Check today's image
         id: fact
         run: |
           TODAY=$(TZ=Asia/Kolkata date +%F)
-          DATA=$(curl -fsSL "https://raw.githubusercontent.com/creativeAnil/daily-facts-content/main/facts_data/fact_of_the_day/fact_of_the_day.json")
-          DATE=$(echo "$DATA" | jq -r '.date // empty')
-          IMAGE=$(echo "$DATA" | jq -r '.image // empty')
+          BASE="https://raw.githubusercontent.com/creativeAnil/daily-facts-content/main/facts_data/fact_of_the_day/"
 
-          if [ "$DATE" != "$TODAY" ] || [ -z "$IMAGE" ]; then
-            exit 0
-          fi
+          for EXT in png jpg jpeg webp; do
+            IMAGE_URL="${BASE}${TODAY}.${EXT}"
 
-          curl -fsSI "https://raw.githubusercontent.com/creativeAnil/daily-facts-content/main/facts_data/fact_of_the_day/$IMAGE" > /dev/null
-          echo "ready=true" >> "$GITHUB_OUTPUT"
+            if curl -fsSI "$IMAGE_URL" > /dev/null; then
+              echo "ready=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+
+          exit 0
 
       - name: Authenticate Firebase
         if: steps.fact.outputs.ready == 'true'
@@ -38,6 +40,7 @@ jobs:
         if: steps.fact.outputs.ready == 'true'
         run: |
           TOKEN=$(gcloud auth application-default print-access-token)
+
           curl -fsS -X POST \
             "https://fcm.googleapis.com/v1/projects/fact-of-the-day-33ea4/messages:send" \
             -H "Authorization: Bearer $TOKEN" \
