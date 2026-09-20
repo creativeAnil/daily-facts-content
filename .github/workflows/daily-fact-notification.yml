@@ -1,0 +1,45 @@
+name: Daily Fact Notification
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check today's fact
+        id: fact
+        run: |
+          TODAY=$(TZ=Asia/Kolkata date +%F)
+          DATA=$(curl -fsSL "https://raw.githubusercontent.com/creativeAnil/daily-facts-content/main/facts_data/fact_of_the_day/fact_of_the_day.json")
+          DATE=$(echo "$DATA" | jq -r '.date // empty')
+          IMAGE=$(echo "$DATA" | jq -r '.image // empty')
+
+          if [ "$DATE" != "$TODAY" ] || [ -z "$IMAGE" ]; then
+            exit 0
+          fi
+
+          curl -fsSI "https://raw.githubusercontent.com/creativeAnil/daily-facts-content/main/facts_data/fact_of_the_day/$IMAGE" > /dev/null
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate Firebase
+        if: steps.fact.outputs.ready == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}'
+
+      - name: Setup Google Cloud
+        if: steps.fact.outputs.ready == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Send notification
+        if: steps.fact.outputs.ready == 'true'
+        run: |
+          TOKEN=$(gcloud auth application-default print-access-token)
+          curl -fsS -X POST \
+            "https://fcm.googleapis.com/v1/projects/fact-of-the-day-33ea4/messages:send" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"message":{"topic":"all_users","notification":{"title":"Fact of the Day","body":"Discover today'\''s fact."},"data":{"type":"fact_of_the_day"}}}'
