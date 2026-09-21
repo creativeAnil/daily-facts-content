@@ -1,5 +1,5 @@
 {
-  "version": "1.0.7",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.7/daily-facts-v1.0.7.apk",
-  "releaseNotes": "Daily Fact notifications, Daily Facts screen improvements, and support for PNG, JPG, JPEG, and WEBP daily images."
+  "version": "1.0.8",
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.8/daily-facts-v1.0.8.apk",
+  "releaseNotes": "Updater security hardening, Daily Fact notifications, Daily Facts screen improvements, and support for PNG, JPG, JPEG, and WEBP daily images."
 }
