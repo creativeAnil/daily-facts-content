@@ -1,5 +1,5 @@
 {
   "version": "1.0.9",
   "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.9/daily-facts-v1.0.9.apk",
-  "releaseNotes": "Improved onboarding flow, notification permission from the onboarding switch, faster onboarding completion, Firebase sync in the background, and bug fixes."
+  "releaseNotes": "Improved onboarding flow, faster onboarding completion, category selection fix, and bug fixes."
 }
