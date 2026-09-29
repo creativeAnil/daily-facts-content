@@ -1,6 +1,6 @@
 {
-  "version": "1.0.10",
+  "version": "1.0.11",
   "minimumVersion": "1.0.9",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/1.0.10/daily-facts-v1.0.10.apk",
-  "releaseNotes": "Random unread fact shown on startup, update support, and bug fixes."
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.11/daily-facts-v1.0.11.apk",
+  "releaseNotes": "Random unread fact selection on startup and category change, Firebase reconnect improvements, and bug fixes."
 }
