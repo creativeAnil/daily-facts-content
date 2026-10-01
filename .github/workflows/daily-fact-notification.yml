@@ -2,15 +2,51 @@ name: Daily Fact Notification
 
 on:
   schedule:
-    - cron: '30 3 * * *'
+    - cron: '30 3 * * *'  # 9:00 AM IST
+    - cron: '35 3 * * *'  # 9:05 AM IST
+    - cron: '40 3 * * *'  # 9:10 AM IST
+    - cron: '45 3 * * *'  # 9:15 AM IST
+    - cron: '50 3 * * *'  # 9:20 AM IST
+    - cron: '55 3 * * *'  # 9:25 AM IST
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-fact-notification
+  cancel-in-progress: false
 
 jobs:
   send:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Check daily send status
+        id: status
+        run: |
+          TODAY=$(TZ=Asia/Kolkata date +%F)
+          STATE_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/.github/daily-fact-notification-state.json"
+
+          LAST_SENT=""
+
+          if curl -fsSL "$STATE_URL" -o state.json; then
+            LAST_SENT=$(jq -r '.lastSentDate // empty' state.json)
+          fi
+
+          echo "today=$TODAY"
+          echo "last_sent=$LAST_SENT"
+
+          if [ "$LAST_SENT" = "$TODAY" ]; then
+            echo "already_sent=true" >> "$GITHUB_OUTPUT"
+            echo "Notification already sent today."
+          else
+            echo "already_sent=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check today's image
         id: fact
+        if: steps.status.outputs.already_sent != 'true'
         run: |
           TODAY=$(TZ=Asia/Kolkata date +%F)
           BASE="https://raw.githubusercontent.com/creativeAnil/daily-facts-content/main/facts_data/fact_of_the_day/"
@@ -20,24 +56,26 @@ jobs:
 
             if curl -fsSI "$IMAGE_URL" > /dev/null; then
               echo "ready=true" >> "$GITHUB_OUTPUT"
+              echo "Today's Fact of the Day image found: $IMAGE_URL"
               exit 0
             fi
           done
 
-          exit 0
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          echo "Today's Fact of the Day image is not available yet."
 
       - name: Authenticate Firebase
-        if: steps.fact.outputs.ready == 'true'
+        if: steps.status.outputs.already_sent != 'true' && steps.fact.outputs.ready == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}'
 
       - name: Setup Google Cloud
-        if: steps.fact.outputs.ready == 'true'
+        if: steps.status.outputs.already_sent != 'true' && steps.fact.outputs.ready == 'true'
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Send notification
-        if: steps.fact.outputs.ready == 'true'
+        if: steps.status.outputs.already_sent != 'true' && steps.fact.outputs.ready == 'true'
         run: |
           TOKEN=$(gcloud auth application-default print-access-token)
 
@@ -46,3 +84,39 @@ jobs:
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"message":{"topic":"all_users","notification":{"title":"Fact of the Day","body":"Discover today'\''s fact."},"data":{"type":"fact_of_the_day"}}}'
+
+      - name: Record successful send
+        if: steps.status.outputs.already_sent != 'true' && steps.fact.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TODAY=$(TZ=Asia/Kolkata date +%F)
+          STATE_PATH=".github/daily-fact-notification-state.json"
+          API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/${STATE_PATH}"
+
+          CONTENT=$(printf '{\n  "lastSentDate": "%s"\n}\n' "$TODAY" | base64 -w 0)
+
+          EXISTING=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL" || true)
+
+          SHA=$(echo "$EXISTING" | jq -r '.sha // empty')
+
+          if [ -n "$SHA" ]; then
+            curl -fsS -X PUT \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              "$API_URL" \
+              -d "{\"message\":\"Update daily fact notification state\",\"content\":\"$CONTENT\",\"sha\":\"$SHA\",\"branch\":\"main\"}"
+          else
+            curl -fsS -X PUT \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              "$API_URL" \
+              -d "{\"message\":\"Create daily fact notification state\",\"content\":\"$CONTENT\",\"branch\":\"main\"}"
+          fi
+
+          echo "Recorded successful notification for $TODAY."
