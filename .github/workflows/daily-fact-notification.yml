@@ -8,6 +8,13 @@ on:
     - cron: '45 3 * * *'  # 9:15 AM IST
     - cron: '50 3 * * *'  # 9:20 AM IST
     - cron: '55 3 * * *'  # 9:25 AM IST
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'facts_data/fact_of_the_day/**'
+
   workflow_dispatch:
 
 permissions:
@@ -34,8 +41,8 @@ jobs:
             LAST_SENT=$(jq -r '.lastSentDate // empty' state.json)
           fi
 
-          echo "today=$TODAY"
-          echo "last_sent=$LAST_SENT"
+          echo "Today: $TODAY"
+          echo "Last sent: $LAST_SENT"
 
           if [ "$LAST_SENT" = "$TODAY" ]; then
             echo "already_sent=true" >> "$GITHUB_OUTPUT"
@@ -56,7 +63,8 @@ jobs:
 
             if curl -fsSI "$IMAGE_URL" > /dev/null; then
               echo "ready=true" >> "$GITHUB_OUTPUT"
-              echo "Today's Fact of the Day image found: $IMAGE_URL"
+              echo "Today's Fact of the Day image found:"
+              echo "$IMAGE_URL"
               exit 0
             fi
           done
@@ -119,4 +127,4 @@ jobs:
               -d "{\"message\":\"Create daily fact notification state\",\"content\":\"$CONTENT\",\"branch\":\"main\"}"
           fi
 
-          echo "Recorded successful notification for $TODAY."
+          echo "Notification state recorded for $TODAY."
