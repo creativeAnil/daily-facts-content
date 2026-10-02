@@ -1,0 +1,135 @@
+name: Broadcast Push Notification
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/broadcast_requests/*.json'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: broadcast-push
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for broadcast requests
+        id: requests
+        run: |
+          shopt -s nullglob
+          files=(.github/broadcast_requests/*.json)
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "has_requests=false" >> "$GITHUB_OUTPUT"
+            echo "No broadcast requests found."
+            exit 0
+          fi
+
+          echo "has_requests=true" >> "$GITHUB_OUTPUT"
+          echo "Found ${#files[@]} broadcast request(s)."
+
+      - name: Authenticate Firebase
+        if: steps.requests.outputs.has_requests == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}'
+
+      - name: Setup Google Cloud
+        if: steps.requests.outputs.has_requests == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Send broadcast notifications
+        if: steps.requests.outputs.has_requests == 'true'
+        run: |
+          TOKEN=$(gcloud auth application-default print-access-token)
+
+          shopt -s nullglob
+          files=(.github/broadcast_requests/*.json)
+
+          for FILE in "${files[@]}"; do
+            echo "----------------------------------------"
+            echo "Processing: $FILE"
+
+            TITLE=$(jq -r '.title // empty' "$FILE")
+            MESSAGE=$(jq -r '.message // empty' "$FILE")
+            BUTTON_TEXT=$(jq -r '.buttonText // empty' "$FILE")
+            BUTTON_URL=$(jq -r '.buttonUrl // empty' "$FILE")
+            BROADCAST_ID=$(jq -r '.broadcastId // empty' "$FILE")
+
+            if [ -z "$TITLE" ] || [ -z "$MESSAGE" ]; then
+              echo "Invalid broadcast request. Skipping."
+              continue
+            fi
+
+            PAYLOAD=$(jq -n \
+              --arg title "$TITLE" \
+              --arg body "$MESSAGE" \
+              --arg type "broadcast" \
+              --arg broadcastId "$BROADCAST_ID" \
+              --arg buttonText "$BUTTON_TEXT" \
+              --arg buttonUrl "$BUTTON_URL" \
+              '{
+                message: {
+                  topic: "all_users",
+                  notification: {
+                    title: $title,
+                    body: $body
+                  },
+                  data: {
+                    type: $type,
+                    broadcastId: $broadcastId,
+                    buttonText: $buttonText,
+                    buttonUrl: $buttonUrl
+                  },
+                  android: {
+                    priority: "HIGH"
+                  }
+                }
+              }')
+
+            RESPONSE=$(curl -fsS -X POST \
+              "https://fcm.googleapis.com/v1/projects/fact-of-the-day-33ea4/messages:send" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json; charset=UTF-8" \
+              -d "$PAYLOAD")
+
+            echo "FCM response:"
+            echo "$RESPONSE"
+
+            echo "Notification sent successfully."
+
+            SHA=$(curl -fsSL \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/$FILE" \
+              | jq -r '.sha')
+
+            curl -fsS -X DELETE \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/$FILE" \
+              -d "$(jq -n \
+                --arg message "Process broadcast push request" \
+                --arg sha "$SHA" \
+                --arg branch "main" \
+                '{
+                  message: $message,
+                  sha: $sha,
+                  branch: $branch
+                }')"
+
+            echo "Request file removed after successful delivery."
+          done
