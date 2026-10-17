@@ -1,6 +1,6 @@
 {
-  "version": "1.0.11",
-  "minimumVersion": "1.0.9",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.11/daily-facts-v1.0.11.apk",
-  "releaseNotes": "Random unread fact selection on startup and category change, reconnect improvements, and bug fixes."
+  "version": "1.0.16",
+  "minimumVersion": "1.0.12",
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.16/daily-facts-v1.0.16.apk",
+  "releaseNotes": "Improved notification permission status and bell indicator, 24-hour facts improvements, and bug fixes."
 }
