@@ -1,6 +1,6 @@
 {
-  "version": "1.0.17",
+  "version": "1.0.18",
   "minimumVersion": "1.0.14",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.17/daily-facts-v1.0.17.apk",
-  "releaseNotes": "Improved APK update download handling, update status and error handling, plus bug fixes and stability improvements."
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.18/daily-facts-v1.0.18.apk",
+  "releaseNotes": "Improved in-app APK download and installation handling, with testing and stability improvements."
 }
