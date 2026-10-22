@@ -1,7 +1,6 @@
-
 {
-  "version": "1.0.19",
-  "minimumVersion": "1.0.15",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.19/daily-facts-v1.0.19.apk",
-  "releaseNotes": "Daily Facts v1.0.19 adds improved UPI donation flow and downloadable donation QR cards. IMPORTANT: This release uses a new signing key and cannot update installations signed with the previous key. Uninstall the old app before installing this APK; uninstalling may erase locally stored app data. The website download link is available in the app Help section."
+  "version": "1.0.21",
+  "minimumVersion": "1.0.20",
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.21/daily-facts-v1.0.21.apk",
+  "releaseNotes": "Daily Facts v1.0.21 (Build 22) improves text-fact selection to reduce repeated facts during a reading cycle, fixes push notification taps to open the app directly, and includes general stability improvements."
 }
