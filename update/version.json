@@ -1,6 +1,6 @@
 {
-  "version": "1.0.21",
+  "version": "1.0.22",
   "minimumVersion": "1.0.20",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.21/daily-facts-v1.0.21.apk",
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.21/daily-facts-v1.0.22.apk",
   "releaseNotes": "Daily Facts v1.0.21 (Build 22) improves text-fact selection to reduce repeated facts during a reading cycle, fixes push notification taps to open the app directly, and includes general stability improvements."
 }
