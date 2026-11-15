@@ -1,6 +1,7 @@
+
 {
-  "version": "1.0.25",
+  "version": "1.0.26",
   "minimumVersion": "1.0.20",
-  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.25/daily-facts-v1.0.25.apk",
-  "releaseNotes": "Bug fixes and improvements."
+  "apkUrl": "https://github.com/creativeAnil/daily-facts-content/releases/download/v1.0.26/daily-facts-v1.0.26.apk",
+  "releaseNotes": "Improved reliability, bug fixes, and performance improvements."
 }
